@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Construction | Coming Soon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 30px;
+            /* Placeholder styling if image is missing */
+            font-weight: bold;
+            font-size: 24px;
+            color: #007bff;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 50px;
+            font-size: 0.9rem;
+            color: #adb5bd;
+        }
+
+        /* Support for dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212;
+                color: #e0e0e0;
+            }
+            h1 { color: #ffffff; }
+            p { color: #b0b0b0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Replace 'logo.png' with the actual path to your logo file -->
+        <img src="logo.png" alt="Company Logo" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div style="display:none; margin-bottom: 30px; font-size: 24px; font-weight: bold; color: #007bff;">TrailTeam</div>
+
+        <div class="loader"></div>
+        <h1>Under Construction</h1>
+        <p>Our website is currently under development. We are working hard to give you the best experience. Please check back soon!</p>
+        
+        <div class="footer">
+            &copy; 2026 TrailTeam. All rights reserved.
+        </div>
+    </div>
+
+</body>
+</html>
