@@ -3,103 +3,615 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>TrailTeam | Salesforce Development</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="description" content="TrailTeam specializes in development for the Salesforce platform: integrations, custom Lightning components and Apex solutions, delivered by a certified team.">
+    <link rel="canonical" href="https://trailteam.dev/">
+    <meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#10151a" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trailteam.dev/">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="TrailTeam | Salesforce Development">
+    <meta property="og:description" content="We specialize in development for the Salesforce platform: integrations, custom Lightning components and Apex, built by a certified team.">
+    <meta property="og:image" content="https://trailteam.dev/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body, html {
-            min-height: 100vh;
+        /* Light is the default. The dark values are repeated for two selectors:
+           the system preference (unless the visitor forced light) and an explicit choice. */
+        :root {
+            --teal: #48c0c8;
+            --violet: #6058a0;
+            --deep: #086078;
+
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --border: #e3e7eb;
+            --ink: #1b2733;
+            --ink-soft: #5b6b7b;
+            --accent: var(--deep);
+
+            --art-bg: #ffffff;
+            --art-border: var(--border);
+            --hero-art: url(hero.webp);
+            --team-art: url(team.webp);
+            --logo-art: url(logo.png);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #10151a;
+                --surface: #171e26;
+                --border: #28323d;
+                --ink: #e8edf2;
+                --ink-soft: #a3b1bf;
+                --accent: var(--teal);
+
+                --art-bg: transparent;
+                --art-border: transparent;
+                --hero-art: url(hero-dark.webp);
+                --team-art: url(team-dark.webp);
+                --logo-art: url(logo-dark.png);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #10151a;
+            --surface: #171e26;
+            --border: #28323d;
+            --ink: #e8edf2;
+            --ink-soft: #a3b1bf;
+            --accent: var(--teal);
+
+            --art-bg: transparent;
+            --art-border: transparent;
+            --hero-art: url(hero-dark.webp);
+            --team-art: url(team-dark.webp);
+            --logo-art: url(logo-dark.png);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
             margin: 0;
             font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .container {
-            max-width: none;
-        }
-
-        header {
-            margin-bottom: 0px;
-        }
-
-        .header-img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin-bottom: 0px;
-        }
-
-        .logo {
-            max-width: 180px;
-            height: auto;
-            margin-bottom: 20px;
-        }
-
-        .salesforce-info {
-            padding: 20px;
-            background: rgba(0, 123, 255, 0.05);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-            color: #212529;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #6c757d;
-            margin-bottom: 20px;
+            background-color: var(--bg);
+            color: var(--ink);
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .footer {
-            margin-top: 50px;
-            font-size: 0.9rem;
-            color: #adb5bd;
+        .wrap {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 16px;
         }
 
-        /* Support for dark mode */
+        h1, h2 {
+            line-height: 1.15;
+            color: var(--ink);
+            margin: 0;
+        }
+
+        h1 { font-size: clamp(2.1rem, 6vw, 3.4rem); font-weight: 700; letter-spacing: -0.01em; }
+        h2 { font-size: clamp(1.5rem, 4vw, 2.1rem); font-weight: 700; }
+
+        p { margin: 16px 0 0; color: var(--ink-soft); }
+
+        .lede { font-size: clamp(1.05rem, 2.5vw, 1.3rem); }
+
+        .rule {
+            width: 72px;
+            height: 4px;
+            margin-top: 24px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--teal), var(--violet));
+        }
+
+        /* Header — stacked and left-aligned on narrow screens, one row once it fits. */
+        .site-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 24px 0 8px;
+        }
+
+        @media (min-width: 760px) {
+            .site-header { flex-direction: row; align-items: center; gap: 14px 28px; }
+            .site-nav { margin-left: auto; }
+        }
+
+        /* The wordmark is line art: a white chip in light mode, bare strokes in dark.
+           `align-self` centres it horizontally in the stacked mobile header and
+           vertically once the header becomes a row. */
+        .brand {
+            display: block;
+            align-self: center;
+            width: 132px;
+            height: 120px;
+            background-color: var(--art-bg);
+            background-image: var(--logo-art);
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            background-origin: content-box;
+            border: 1px solid var(--art-border);
+            border-radius: 14px;
+            padding: 8px 14px;
+        }
+
+        .site-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 22px;
+        }
+
+        .site-nav a {
+            color: var(--ink-soft);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 2px;
+        }
+
+        .site-nav a:hover { color: var(--ink); border-bottom-color: var(--teal); }
+
+        .header-end {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-mail {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .header-mail:hover { border-bottom-color: var(--teal); }
+
+        .theme-toggle {
+            display: grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            background: var(--surface);
+            color: var(--ink-soft);
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover { color: var(--ink); border-color: var(--teal); }
+
+        .theme-toggle svg { width: 20px; height: 20px; }
+
+        .theme-toggle .icon-sun { display: none; }
+
         @media (prefers-color-scheme: dark) {
-            body { background-color: #121212; color: #e0e0e0; }
-            h1 { color: #ffffff; }
-            p { color: #b0b0b0; }
-            .salesforce-info { background: rgba(255, 255, 255, 0.05); }
+            :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+            :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+        }
+
+        :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+        :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+        /* Hero */
+        .hero {
+            display: grid;
+            gap: 32px;
+            align-items: center;
+            padding: 24px 0 8px;
+        }
+
+        @media (min-width: 860px) {
+            .hero { grid-template-columns: 1fr 1.05fr; gap: 48px; padding: 40px 0 24px; }
+        }
+
+        /* Illustrations are line art. Light mode sits them on a white card; dark mode uses
+           knocked-out copies with no card, so they stop looking like pasted-in rectangles. */
+        .art {
+            background-color: var(--art-bg);
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            background-origin: content-box;
+            border: 1px solid var(--art-border);
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .art-hero {
+            aspect-ratio: 1100 / 976;
+            background-image: var(--hero-art);
+        }
+
+        .art-team {
+            aspect-ratio: 1122 / 374;
+            background-image: var(--team-art);
+        }
+
+        /* Sections */
+        section + section { margin-top: 56px; }
+
+        main section { scroll-margin-top: 24px; }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: clamp(24px, 4vw, 40px);
+        }
+
+        .panel p { max-width: 64ch; }
+
+        .section-intro { margin-bottom: 28px; }
+
+        /* Certifications */
+        .cert-grid {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .cert-grid li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
+        .cert-grid img {
+            flex: 0 0 auto;
+            width: 64px;
+            height: auto;
+        }
+
+        /* Services */
+        .service-grid,
+        .steps {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 14px;
+        }
+
+        .service-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+        .service-grid li,
+        .steps li {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 24px;
+        }
+
+        .service-grid h3,
+        .steps h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.3;
+        }
+
+        .service-grid p,
+        .steps p { margin-top: 8px; font-size: 0.97rem; }
+
+        /* Process — numbers come from a counter so the markup stays plain */
+        .steps { counter-reset: step; }
+
+        @media (min-width: 760px) {
+            .steps { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 70px;
+        }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 24px;
+            top: 22px;
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--teal), var(--violet));
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* Team — copy runs the full width of the section at every size, with the
+           illustration always underneath it. */
+        .team-copy { margin-bottom: 28px; }
+
+        .team-copy p { max-width: none; }
+
+        .team-copy p + p { margin-top: 14px; }
+
+        /* Contact */
+        .contact { text-align: center; }
+
+        .contact p { margin-left: auto; margin-right: auto; }
+
+        /* The label is an email address, so the pill has to survive narrow screens:
+           it may shrink and, as a last resort, break rather than escape its panel. */
+        .btn {
+            display: inline-block;
+            max-width: 100%;
+            margin-top: 28px;
+            padding: 15px clamp(16px, 5vw, 32px);
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--teal), var(--violet));
+            color: #ffffff;
+            font-size: clamp(0.85rem, 3.4vw, 1.05rem);
+            font-weight: 700;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .btn:hover { filter: brightness(1.08); }
+
+        :is(.btn, .theme-toggle, .site-nav a, .header-mail):focus-visible {
+            outline: 3px solid var(--violet);
+            outline-offset: 3px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 72px;
+            padding: 28px 0 40px;
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--ink-soft);
+        }
+
+        footer a { color: inherit; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <img src="header_1.png" alt="TrailTeam Header" class="header-img">
-            
-            <img src="logo.png" alt="Company Logo" class="logo" onerror="this.style.display='none';">
+    <div class="wrap">
+
+        <header class="site-header">
+            <span class="brand" role="img" aria-label="TrailTeam"></span>
+
+            <nav class="site-nav" aria-label="Sections">
+                <a href="#services">Services</a>
+                <a href="#process">Process</a>
+                <a href="#certifications">Certifications</a>
+                <a href="#contact">Contact</a>
+            </nav>
+
+            <div class="header-end">
+                <a class="header-mail" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
-        <section class="salesforce-info">
-            <h1>Expert Salesforce Development</h1>
-            <p>
-                TrailTeam specializes in delivering high-end engineering solutions for the Salesforce ecosystem. 
-                From complex integrations to custom Lightning components, we build robust projects 
-                designed to scale your business and optimize your CRM experience.
-            </p>
-        </section>
+        <main>
+            <section class="hero">
+                <div>
+                    <h1>We build your ideas</h1>
+                    <p class="lede">We specialize in development for the Salesforce platform.</p>
+                    <div class="rule"></div>
+                </div>
+                <div class="art art-hero" role="img"
+                     aria-label="Developer workstation with a curved monitor showing code"></div>
+            </section>
 
-        <img src="header2.png" alt="Our Projects" class="header-img">
+            <section id="services">
+                <div class="section-intro">
+                    <h2>What we do</h2>
+                    <p>
+                        TrailTeam specializes in delivering high-end engineering solutions for the Salesforce ecosystem.
+                        From complex integrations to custom Lightning components, we build robust projects
+                        designed to scale your business and optimize your CRM experience.
+                    </p>
+                </div>
+                <ul class="service-grid">
+                    <li>
+                        <h3>Lightning Web Components</h3>
+                        <p>Custom interfaces on Salesforce's modern front-end framework — reusable, fast, and consistent with the rest of your org.</p>
+                    </li>
+                    <li>
+                        <h3>Apex and platform logic</h3>
+                        <p>Triggers, batch jobs and asynchronous processing written to scale, with governor limits designed for rather than discovered in production.</p>
+                    </li>
+                    <li>
+                        <h3>Testing and QA</h3>
+                        <p>Apex test classes that assert real behaviour instead of padding coverage numbers, plus regression and integration runs before anything reaches production.</p>
+                    </li>
+                    <li>
+                        <h3>Sales Cloud</h3>
+                        <p>Pipeline, forecasting and automation shaped around how your team actually sells, not around a default configuration.</p>
+                    </li>
+                    <li>
+                        <h3>Service Cloud</h3>
+                        <p>Case management, omni-channel routing and knowledge bases that shorten resolution times instead of adding clicks.</p>
+                    </li>
+                    <li>
+                        <h3>Commerce Cloud</h3>
+                        <p>Storefronts, catalogues and checkout flows that share data with the rest of your Salesforce org rather than running beside it.</p>
+                    </li>
+                    <li>
+                        <h3>Integrations</h3>
+                        <p>REST and SOAP APIs, middleware and event-driven flows connecting Salesforce to your ERP, billing and everything else in the stack.</p>
+                    </li>
+                    <li>
+                        <h3>Data architecture and migration</h3>
+                        <p>Object models that still hold up as volumes grow, and migrations off legacy CRMs or spreadsheets with the mapping, deduplication and validation done before go-live.</p>
+                    </li>
+                    <li>
+                        <h3>Deployment and release management</h3>
+                        <p>Source-driven development, scratch orgs and CI pipelines, so shipping to production becomes a routine step rather than an event everyone dreads.</p>
+                    </li>
+                    <li>
+                        <h3>Administration and configuration</h3>
+                        <p>The day-to-day org work: users and permission sets, flows and validation rules, reports and dashboards, and the data hygiene that keeps all of it trustworthy.</p>
+                    </li>
+                </ul>
+            </section>
 
-        <div class="footer">
-            &copy; 2026 TrailTeam. All rights reserved.
-        </div>
+            <section id="process">
+                <div class="section-intro">
+                    <h2>How we work</h2>
+                    <p class="lede">Four steps, no surprises in between.</p>
+                </div>
+                <ol class="steps">
+                    <li>
+                        <h3>Discovery call</h3>
+                        <p>We talk through your goals, your current org and the constraints around it. No commitment and no charge — and if we are not the right fit, we will say so.</p>
+                    </li>
+                    <li>
+                        <h3>Scope and estimate</h3>
+                        <p>You get a written proposal: what we will build, in what order, how long it takes and what it costs. Fixed price or time and materials, whichever suits the work.</p>
+                    </li>
+                    <li>
+                        <h3>Build the way you work</h3>
+                        <p>We slot into whatever you already run — sprints, a Kanban board or your own hybrid — using your tracker and your definition of done. If nothing is in place yet, two-week iterations are a sensible default. Either way you get working software in a sandbox you can click through.</p>
+                    </li>
+                    <li>
+                        <h3>Release and support</h3>
+                        <p>We deploy to production, hand over documentation, and stay available for the changes that follow — because there are always changes that follow.</p>
+                    </li>
+                </ol>
+            </section>
+
+            <section id="certifications">
+                <div class="section-intro">
+                    <h2>Salesforce certifications</h2>
+                    <p class="lede">Credentials held across the team.</p>
+                </div>
+                <ul class="cert-grid">
+                    <li><img src="certs/javascript-developer.webp" alt="" width="192" height="188" loading="lazy">JavaScript Developer</li>
+                    <li><img src="certs/platform-app-builder.webp" alt="" width="192" height="188" loading="lazy">Platform App Builder</li>
+                    <li><img src="certs/platform-developer.webp" alt="" width="192" height="188" loading="lazy">Platform Developer</li>
+                    <li><img src="certs/platform-developer-ii.webp" alt="" width="192" height="188" loading="lazy">Platform Developer II</li>
+                    <li><img src="certs/platform-data-architect.webp" alt="" width="192" height="188" loading="lazy">Platform Data Architect</li>
+                    <li><img src="certs/platform-integration-architect.webp" alt="" width="192" height="188" loading="lazy">Platform Integration Architect</li>
+                    <li><img src="certs/platform-sharing-and-visibility-architect.webp" alt="" width="192" height="188" loading="lazy">Platform Sharing and Visibility Architect</li>
+                    <li><img src="certs/platform-development-lifecycle-and-deployment-architect.webp" alt="" width="192" height="188" loading="lazy">Platform Development Lifecycle and Deployment Architect</li>
+                    <li><img src="certs/application-architect.webp" alt="" width="192" height="188" loading="lazy">Application Architect</li>
+                </ul>
+            </section>
+
+            <section id="team">
+                <div class="team-copy">
+                    <h2>Meet the innovators</h2>
+                    <p class="lede">A dedicated team, modern technology.</p>
+                    <p>
+                        Large integrators sell you a brand, then staff the project with whoever is free that
+                        quarter. You meet the senior architect once, during the pitch, and spend the rest of the
+                        engagement talking to a project manager who carries your questions to people you never meet.
+                    </p>
+                    <p>
+                        A small team works the other way round. The engineers who scope your project are the ones
+                        who build it, so answers come back the same day instead of travelling down a chain. When
+                        priorities shift mid-sprint, we adjust — there is no change-request process to survive first.
+                    </p>
+                    <p>
+                        Everyone here is Salesforce certified and senior, so nobody is learning the platform on your
+                        budget. And because we take on a limited number of projects at a time, yours is never the one
+                        that quietly slips.
+                    </p>
+                </div>
+                <div class="art art-team" role="img"
+                     aria-label="A team collaborating around cloud infrastructure, code and security"></div>
+            </section>
+
+            <section class="panel contact" id="contact">
+                <h2>Let's talk about your project</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
     </div>
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            var button = document.querySelector('.theme-toggle');
+            var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function active() {
+                return root.dataset.theme || (systemDark.matches ? 'dark' : 'light');
+            }
+
+            function relabel() {
+                button.setAttribute('aria-label',
+                    active() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+            }
+
+            button.addEventListener('click', function () {
+                var next = active() === 'dark' ? 'light' : 'dark';
+                root.dataset.theme = next;
+                try { localStorage.setItem('theme', next); } catch (e) {}
+                relabel();
+            });
+
+            systemDark.addEventListener('change', relabel);
+            relabel();
+        })();
+    </script>
 
 </body>
 </html>
