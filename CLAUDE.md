@@ -22,14 +22,13 @@ Layout is a `.wrap` container (max-width 1080px, 16px gutters) holding stacked s
 
 ### Theming
 
-Light is the default set of custom properties on `:root`. The dark set is written twice, and both copies must be kept in sync:
+Dark is the default set of custom properties on `:root`, and the site deliberately does not consult `prefers-color-scheme` — a visitor whose OS is set to light still lands on the dark site. Light is one override block, `:root[data-theme="light"]`, applied only when the visitor picks it.
 
-- `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` — follows the OS unless the visitor forced light.
-- `:root[data-theme="dark"] { … }` — an explicit choice from the toggle.
+The sun/moon button writes `light`/`dark` to `localStorage` and sets `data-theme` on `<html>`. A tiny script in `<head>` re-applies the stored value before first paint, so there is no flash; every `localStorage` access is wrapped in try/catch because it throws in some privacy modes. Clearing the stored key returns the visitor to the dark default.
 
-The sun/moon button writes `light`/`dark` to `localStorage` and sets `data-theme` on `<html>`. A tiny script in `<head>` re-applies the stored value before first paint, so there is no flash; every `localStorage` access is wrapped in try/catch because it throws in some privacy modes. Removing the stored key returns the visitor to following their OS.
+`color-scheme` is declared next to the tokens in both blocks so scrollbars and native controls match the theme, and the single `theme-color` meta tag is rewritten by the toggle script.
 
-Everything themeable goes through tokens, including the illustrations (`--hero-art`, `--team-art`, `--logo-art`, `--art-bg`, `--art-border`). Hard-coded hex outside `:root` will break one of the three theme paths.
+Everything themeable goes through tokens, including the illustrations (`--hero-art`, `--team-art`, `--logo-art`, `--art-bg`, `--art-border`). Hard-coded hex outside those two blocks will break one of the two theme paths.
 
 The brand palette is sampled from the logo artwork: teal `#48c0c8`, violet `#6058a0`, deep teal `#086078`, purple `#603080`.
 
@@ -45,7 +44,7 @@ Served assets are derived, not hand-made. The originals are the two full-resolut
 - The knockout ramps alpha from the pixel's darkest channel, so anti-aliased edges stay smooth. Run it on the lossless original, never on an already-encoded WebP — compression noise near white turns into visible speckle.
 - `logo-dark.png` additionally lifts strokes darker than `#bebebe` up to a 205 peak channel, keeping hue. Without it the dark-teal "TRAIL" and purple "TEAM" disappear against the dark background. The illustrations do not need this lift; their outlines are already bright.
 
-Served weight is about 230 KB in light mode and 285 KB in dark (the alpha channel costs ~50 KB); 85 KB of either is the nine certification badges, lazy-loaded below the fold. Because the illustrations are CSS `background-image` driven by tokens, a visitor only downloads the variant for their active theme. It was ~10 MB before optimization; keep new assets in that budget.
+Served weight is about 285 KB in dark, which is what almost everyone gets now that dark is the default, and 230 KB in light (the alpha channel costs ~50 KB); 85 KB of either is the nine certification badges, lazy-loaded below the fold. Because the illustrations are CSS `background-image` driven by tokens, a visitor only downloads the variant for their active theme. It was ~10 MB before optimization; keep new assets in that budget.
 
 ## Crawler files
 

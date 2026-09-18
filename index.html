@@ -7,8 +7,7 @@
     <title>TrailTeam | Salesforce Development</title>
     <meta name="description" content="TrailTeam specializes in development for the Salesforce platform: integrations, custom Lightning components and Apex solutions, delivered by a certified team.">
     <link rel="canonical" href="https://trailteam.dev/">
-    <meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#10151a" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#10151a">
     <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
@@ -34,12 +33,31 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* Light is the default. The dark values are repeated for two selectors:
-           the system preference (unless the visitor forced light) and an explicit choice. */
+        /* Dark is the site default, whatever the visitor's OS prefers.
+           Light applies only when they pick it with the toggle. */
         :root {
             --teal: #48c0c8;
             --violet: #6058a0;
             --deep: #086078;
+
+            color-scheme: dark;
+
+            --bg: #10151a;
+            --surface: #171e26;
+            --border: #28323d;
+            --ink: #e8edf2;
+            --ink-soft: #a3b1bf;
+            --accent: var(--teal);
+
+            --art-bg: transparent;
+            --art-border: transparent;
+            --hero-art: url(hero-dark.webp);
+            --team-art: url(team-dark.webp);
+            --logo-art: url(logo-dark.png);
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
 
             --bg: #f8f9fa;
             --surface: #ffffff;
@@ -53,38 +71,6 @@
             --hero-art: url(hero.webp);
             --team-art: url(team.webp);
             --logo-art: url(logo.png);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
-                --bg: #10151a;
-                --surface: #171e26;
-                --border: #28323d;
-                --ink: #e8edf2;
-                --ink-soft: #a3b1bf;
-                --accent: var(--teal);
-
-                --art-bg: transparent;
-                --art-border: transparent;
-                --hero-art: url(hero-dark.webp);
-                --team-art: url(team-dark.webp);
-                --logo-art: url(logo-dark.png);
-            }
-        }
-
-        :root[data-theme="dark"] {
-            --bg: #10151a;
-            --surface: #171e26;
-            --border: #28323d;
-            --ink: #e8edf2;
-            --ink-soft: #a3b1bf;
-            --accent: var(--teal);
-
-            --art-bg: transparent;
-            --art-border: transparent;
-            --hero-art: url(hero-dark.webp);
-            --team-art: url(team-dark.webp);
-            --logo-art: url(logo-dark.png);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -208,15 +194,11 @@
 
         .theme-toggle svg { width: 20px; height: 20px; }
 
-        .theme-toggle .icon-sun { display: none; }
+        /* The button shows the theme it switches to, so dark-by-default shows the sun. */
+        .theme-toggle .icon-moon { display: none; }
 
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
-            :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
-        }
-
-        :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-        :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+        :root[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+        :root[data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
         /* Hero */
         .hero {
@@ -590,26 +572,27 @@
         (function () {
             var root = document.documentElement;
             var button = document.querySelector('.theme-toggle');
-            var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+            var themeColor = document.querySelector('meta[name="theme-color"]');
 
+            // Dark unless the visitor has explicitly asked for light.
             function active() {
-                return root.dataset.theme || (systemDark.matches ? 'dark' : 'light');
+                return root.dataset.theme === 'light' ? 'light' : 'dark';
             }
 
-            function relabel() {
-                button.setAttribute('aria-label',
-                    active() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+            function sync() {
+                var dark = active() === 'dark';
+                button.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+                if (themeColor) themeColor.setAttribute('content', dark ? '#10151a' : '#f8f9fa');
             }
 
             button.addEventListener('click', function () {
                 var next = active() === 'dark' ? 'light' : 'dark';
                 root.dataset.theme = next;
                 try { localStorage.setItem('theme', next); } catch (e) {}
-                relabel();
+                sync();
             });
 
-            systemDark.addEventListener('change', relabel);
-            relabel();
+            sync();
         })();
     </script>
 
