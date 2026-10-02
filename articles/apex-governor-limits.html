@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Designing Apex around governor limits | TrailTeam</title>
+    <meta name="description" content="Code that works on one record in a sandbox can fail on two hundred in production. The Salesforce governor limits that matter, and the habits that keep Apex inside them.">
+    <link rel="canonical" href="https://trailteam.dev/articles/apex-governor-limits.html">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://trailteam.dev/articles/apex-governor-limits.html">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Designing Apex around governor limits">
+    <meta property="og:description" content="Code that works on one record in a sandbox can fail on two hundred in production. The limits that matter, and the habits that keep you inside them.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="true">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <a class="back" href="./">&larr; All articles</a>
+
+            <article class="prose">
+                <p class="meta">Apex &middot; Beginner &middot; For developers &middot; 3 min read</p>
+                <h1>Designing Apex around governor limits</h1>
+                <p class="lede">
+                    Code that works on one record in a sandbox can fail on two hundred in production.
+                    The limits that matter, and the habits that keep you inside them.
+                </p>
+                <div class="rule"></div>
+
+                <p>
+                    Salesforce is multitenant: your code shares database and application servers with every
+                    other customer on the same instance. Governor limits are how the platform stops one
+                    tenant's runaway loop from slowing down everyone else. They are enforced per transaction,
+                    they are not negotiable, and exceeding one throws a <code>System.LimitException</code>
+                    that cannot be caught &mdash; the whole transaction rolls back.
+                </p>
+                <p>
+                    That makes limits a design input, not a production surprise. The good news is that a
+                    handful of habits cover almost every case.
+                </p>
+
+                <h2>The numbers worth remembering</h2>
+                <p>
+                    The full list is long, but these are the limits that real code actually runs into.
+                    Asynchronous Apex (Queueable, Batch, future methods) gets more headroom on some of them.
+                </p>
+                <table>
+                    <thead>
+                        <tr><th scope="col">Per transaction</th><th scope="col">Synchronous</th><th scope="col">Asynchronous</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>SOQL queries</td><td>100</td><td>200</td></tr>
+                        <tr><td>Records retrieved by SOQL</td><td>50,000</td><td>50,000</td></tr>
+                        <tr><td>DML statements</td><td>150</td><td>150</td></tr>
+                        <tr><td>Records processed by DML</td><td>10,000</td><td>10,000</td></tr>
+                        <tr><td>CPU time</td><td>10 s</td><td>60 s</td></tr>
+                        <tr><td>Heap size</td><td>10 MB</td><td>25 MB</td></tr>
+                        <tr><td>Callouts</td><td>100</td><td>100</td></tr>
+                    </tbody>
+                </table>
+                <p>
+                    One more number belongs next to that table: a trigger is handed up to
+                    <strong>200 records at a time</strong>. A user saving one record in the UI gives your
+                    trigger a list of one. A data load, an integration or a bulk update gives it two hundred.
+                    The same code runs in both cases.
+                </p>
+
+                <h2>No queries or DML inside a loop</h2>
+                <p>This is the classic. The trigger below is correct for a single record:</p>
+<pre><code>trigger OpportunityTrigger on Opportunity (before insert) {
+    for (Opportunity opp : Trigger.new) {
+        Account acc = [SELECT Industry FROM Account WHERE Id = :opp.AccountId];
+        opp.Description = 'Industry: ' + acc.Industry;
+    }
+}</code></pre>
+                <p>
+                    Load 200 opportunities and it runs 200 queries. The 101st throws
+                    <code>Too many SOQL queries: 101</code> and nothing is saved. The fix is always the same
+                    shape: collect the keys, query once, look results up from a map.
+                </p>
+<pre><code>trigger OpportunityTrigger on Opportunity (before insert) {
+    Set&lt;Id&gt; accountIds = new Set&lt;Id&gt;();
+    for (Opportunity opp : Trigger.new) {
+        if (opp.AccountId != null) {
+            accountIds.add(opp.AccountId);
+        }
+    }
+
+    Map&lt;Id, Account&gt; accounts = new Map&lt;Id, Account&gt;(
+        [SELECT Industry FROM Account WHERE Id IN :accountIds]
+    );
+
+    for (Opportunity opp : Trigger.new) {
+        Account acc = accounts.get(opp.AccountId);
+        if (acc != null) {
+            opp.Description = 'Industry: ' + acc.Industry;
+        }
+    }
+}</code></pre>
+                <p>
+                    One query, whether the trigger receives one record or two hundred. DML follows the same
+                    rule: build a list inside the loop, then issue a single <code>insert</code> or
+                    <code>update</code> on the list after it.
+                </p>
+
+                <h2>Remember that the transaction is shared</h2>
+                <p>
+                    Limits are counted across everything that runs in the transaction, not per class. Your
+                    trigger, the record-triggered flows on the same object and any triggers that fire because
+                    of your DML all draw from the same 100 queries. A trigger that uses 30 of them looks fine in isolation and fails once three
+                    other automations are stacked on the same save.
+                </p>
+                <p>
+                    Two practices help. Keep one trigger per object that delegates to a handler class, so the
+                    order of work is visible in one place. And query once per transaction, not once per
+                    method &mdash; pass the data down instead of letting each helper fetch its own copy.
+                </p>
+
+                <h2>Move heavy work out of the request</h2>
+                <p>
+                    If a job genuinely needs to touch tens of thousands of records, no amount of bulkification
+                    will fit it into one synchronous transaction. That is what asynchronous Apex is for:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Queueable</strong> for a follow-up unit of work that should not hold up the
+                        user: it runs in its own transaction with the higher asynchronous limits.
+                    </li>
+                    <li>
+                        <strong>Batch Apex</strong> for large data volumes. The job is split into chunks
+                        (200 records by default), and every chunk gets a fresh set of limits.
+                    </li>
+                    <li>
+                        <strong>Scheduled Apex</strong> for work that belongs to a time of day rather than
+                        to a user action.
+                    </li>
+                </ul>
+                <p>
+                    Asynchronous does not mean unlimited. The same rules apply inside each chunk; you have
+                    just chosen how big a chunk is.
+                </p>
+
+                <h2>Measure instead of guessing</h2>
+                <p>
+                    The <code>Limits</code> class reports consumption at any point in a transaction, which is
+                    useful both in debug logs and in guard clauses:
+                </p>
+<pre><code>System.debug('SOQL: ' + Limits.getQueries() + ' of ' + Limits.getLimitQueries());
+System.debug('CPU:  ' + Limits.getCpuTime() + ' of ' + Limits.getLimitCpuTime() + ' ms');</code></pre>
+                <p>
+                    The debug log also prints a cumulative limit summary at the end of every transaction.
+                    Reading it for the busiest objects in an org takes minutes and shows how much headroom is
+                    left before anything breaks.
+                </p>
+
+                <h2>Test with 200 records, not one</h2>
+                <p>
+                    A test that inserts a single record proves the logic. It says nothing about limits. For
+                    every trigger, add a test that inserts a full batch:
+                </p>
+<pre><code>@IsTest
+static void handlesFullTriggerBatch() {
+    Account acc = new Account(Name = 'Bulk test', Industry = 'Energy');
+    insert acc;
+
+    List&lt;Opportunity&gt; opps = new List&lt;Opportunity&gt;();
+    for (Integer i = 0; i &lt; 200; i++) {
+        opps.add(new Opportunity(
+            Name = 'Opp ' + i,
+            AccountId = acc.Id,
+            StageName = 'Prospecting',
+            CloseDate = Date.today().addDays(30)
+        ));
+    }
+
+    Test.startTest();
+    insert opps;
+    Test.stopTest();
+
+    List&lt;Opportunity&gt; saved = [SELECT Description FROM Opportunity WHERE AccountId = :acc.Id];
+    Assert.areEqual(200, saved.size());
+    for (Opportunity opp : saved) {
+        Assert.areEqual('Industry: Energy', opp.Description);
+    }
+}</code></pre>
+                <p>
+                    <code>Test.startTest()</code> resets the limit counters, so the code under test is
+                    measured on its own rather than together with the data setup. If the trigger has a query
+                    in a loop, this test fails &mdash; in a sandbox, before a data load finds it for you.
+                </p>
+
+                <h2>In short</h2>
+                <ul>
+                    <li>Assume every entry point receives 200 records.</li>
+                    <li>Collect, query once, look up from a map; build a list, write once.</li>
+                    <li>Budget limits for the whole transaction, not for your class alone.</li>
+                    <li>Send large or slow work to Queueable or Batch Apex.</li>
+                    <li>Keep a 200-record test next to every trigger.</li>
+                </ul>
+            </article>
+
+            <section class="panel contact">
+                <h2>Hitting limits in your org?</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Testing who can see what: a QA guide to Salesforce permissions | TrailTeam</title>
+    <meta name="description" content="How to test Salesforce access as a QA engineer: profiles, permission sets, field-level security and sharing, with an access matrix and the places that leak.">
+    <link rel="canonical" href="https://trailteam.dev/articles/testing-salesforce-permissions.html">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://trailteam.dev/articles/testing-salesforce-permissions.html">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Testing who can see what: a QA guide to Salesforce permissions">
+    <meta property="og:description" content="Most access bugs are found by a user who sees something they should not. How to test profiles, permission sets, field-level security and sharing before that happens.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="true">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <a class="back" href="./">&larr; All articles</a>
+
+            <article class="prose">
+                <p class="meta">Testing &middot; Intermediate &middot; For QA &middot; 5 min read</p>
+                <h1>Testing who can see what: a QA guide to Salesforce permissions</h1>
+                <p class="lede">
+                    Most access bugs are found by a user who sees something they should not. How to test
+                    profiles, permission sets, field-level security and sharing before that happens.
+                </p>
+                <div class="rule"></div>
+
+                <p>
+                    Most functional testing on Salesforce is done as a System Administrator, because that is
+                    the user the tester was given. An administrator has View All Data and Modify All Data:
+                    sharing does not apply to them, and in most orgs every field is visible. Everything
+                    works, the story is closed &mdash; and the first real user either cannot open the record
+                    or sees a field that was never meant for them.
+                </p>
+                <p>
+                    Access is a feature with requirements like any other, and it needs its own test design.
+                </p>
+
+                <h2>Four layers, and one that is not security</h2>
+                <p>
+                    Whether a user sees a value is decided by several independent mechanisms. A test has to
+                    know which one it is exercising.
+                </p>
+                <table>
+                    <thead>
+                        <tr><th scope="col">Layer</th><th scope="col">Question it answers</th><th scope="col">Configured in</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Object permissions</td><td>Can the user read, create, edit or delete this type of record at all?</td><td>Profile, permission sets</td></tr>
+                        <tr><td>Field-level security</td><td>Which fields can the user read or edit?</td><td>Profile, permission sets</td></tr>
+                        <tr><td>Record access</td><td>Which particular records?</td><td>Org-wide defaults, role hierarchy, sharing rules, teams, manual shares</td></tr>
+                        <tr><td>Page layout</td><td>What is shown on the record page?</td><td>Layouts, Lightning pages</td></tr>
+                    </tbody>
+                </table>
+                <p>
+                    The last row is the trap. A layout is presentation, not protection: a field removed from
+                    the page is still available in reports, list views and the API unless field-level
+                    security hides it. &ldquo;It is not on the page&rdquo; is never an answer to
+                    &ldquo;can they see it?&rdquo;
+                </p>
+
+                <h2>Start from an access matrix</h2>
+                <p>
+                    Before testing, write down what should be true. Rows are personas &mdash; sales rep,
+                    sales manager, support agent, partner user &mdash; and columns are the objects, sensitive
+                    fields and actions that matter. Each cell holds the expected result: no access, read or
+                    edit. The matrix has to come from the business, not from the current configuration;
+                    copying a profile into a spreadsheet only proves that the org matches itself.
+                </p>
+                <p>
+                    Half of the cells should be negative. &ldquo;A rep cannot see another rep's
+                    opportunities&rdquo; is a test case with the same standing as &ldquo;a rep can edit
+                    their own&rdquo;.
+                </p>
+
+                <h2>Test as the user, never as the admin</h2>
+                <ul>
+                    <li>
+                        <strong>One test user per persona,</strong> with exactly the profile, permission
+                        sets and role that persona has in production. Do not clone an administrator and
+                        take things away.
+                    </li>
+                    <li>
+                        <strong>Two users in the same role.</strong> Peer visibility &mdash; rep A opening
+                        rep B's record &mdash; is where private sharing models fail, and one user per role
+                        cannot test it.
+                    </li>
+                    <li>
+                        <strong>A manager above them.</strong> The role hierarchy gives managers access to
+                        their subordinates' records. For custom objects it can be switched off per object,
+                        so check it instead of assuming.
+                    </li>
+                    <li>
+                        <strong>Work in their session.</strong> Use the Login link next to the user in
+                        Setup and run the scenario end to end: create, find, open, edit, report.
+                    </li>
+                </ul>
+
+                <h2>Look beyond the record page</h2>
+                <p>The record page is the best-guarded door. These are the others:</p>
+                <ul>
+                    <li>
+                        <strong>Reports and dashboards.</strong> A report respects the viewer's access. A
+                        dashboard does not have to: it runs as the user named in its settings, and everyone
+                        who opens it sees that user's numbers.
+                    </li>
+                    <li>
+                        <strong>List views and global search.</strong> Search for a record the persona must
+                        not see. It should not come back at all, not even as a name.
+                    </li>
+                    <li>
+                        <strong>The API.</strong> Query the object as the test user through Workbench or
+                        any REST client. Fields protected only by a layout come straight back.
+                    </li>
+                    <li>
+                        <strong>Custom components.</strong> Apex runs in system mode unless the developer
+                        says otherwise, so a custom Lightning component can show records and fields that
+                        the standard page hides from the same user. Compare the two for every persona.
+                    </li>
+                </ul>
+
+                <h2>Ask the org instead of guessing</h2>
+                <p>
+                    Two queries answer most &ldquo;why can they see this?&rdquo; questions faster than
+                    clicking through Setup. The first reports the access one user has to one record:
+                </p>
+<pre><code>SELECT RecordId, HasReadAccess, HasEditAccess, HasDeleteAccess, MaxAccessLevel
+FROM UserRecordAccess
+WHERE UserId = '005xx000001SvogAAC'
+  AND RecordId = '006xx000004TmiQAAS'</code></pre>
+                <p>The second lists every profile and permission set that opens a field:</p>
+<pre><code>SELECT Parent.Label, Parent.Profile.Name, PermissionsRead, PermissionsEdit
+FROM FieldPermissions
+WHERE SobjectType = 'Opportunity'
+  AND Field = 'Opportunity.Amount'</code></pre>
+                <p>
+                    On a single record, the Sharing Hierarchy action shows who has access and the reason
+                    for each entry.
+                </p>
+
+                <h2>Treat every permission change as a regression</h2>
+                <p>
+                    Permission sets only add. A user's access is the union of everything assigned to them,
+                    so a permission set created for one feature can quietly open another. The only way to
+                    notice is to rerun the negative cells of the matrix.
+                </p>
+                <p>
+                    Rerun them after any change to profiles, permission sets, sharing rules or org-wide
+                    defaults, and after every deployment that carries them &mdash; permissions configured by
+                    hand in a sandbox are not necessarily what reaches production.
+                </p>
+                <p>
+                    Ask developers to turn the record-access rows into Apex tests with
+                    <code>System.runAs</code>. Know its limit: <code>runAs</code> enforces record sharing,
+                    but not object or field permissions, so the field-level rows still need a check through
+                    the UI or the API.
+                </p>
+
+                <h2>In short</h2>
+                <ul>
+                    <li>Never sign off access as an administrator.</li>
+                    <li>Keep object, field and record access apart; a layout is none of them.</li>
+                    <li>Write the matrix first, with as many &ldquo;cannot&rdquo; cells as &ldquo;can&rdquo;.</li>
+                    <li>Two users per role, plus their manager.</li>
+                    <li>Check reports, dashboards, search, the API and custom components, not just the record page.</li>
+                    <li>Rerun the negative cases after every permission change.</li>
+                </ul>
+            </article>
+
+            <section class="panel contact">
+                <h2>Unsure who can see what in your org?</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

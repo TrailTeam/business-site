@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wire or imperative: calling Apex from a Lightning Web Component | TrailTeam</title>
+    <meta name="description" content="Three ways to get Salesforce data into a Lightning Web Component — Lightning Data Service, the wire service and imperative Apex — and how to pick between them.">
+    <link rel="canonical" href="https://trailteam.dev/articles/lwc-wire-vs-imperative-apex.html">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://trailteam.dev/articles/lwc-wire-vs-imperative-apex.html">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Wire or imperative: calling Apex from a Lightning Web Component">
+    <meta property="og:description" content="Three ways to get data into a component, and how to pick between them — starting with the one that needs no Apex at all.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="true">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <a class="back" href="./">&larr; All articles</a>
+
+            <article class="prose">
+                <p class="meta">Lightning Web Components &middot; Intermediate &middot; For developers &middot; 5 min read</p>
+                <h1>Wire or imperative: calling Apex from a Lightning Web Component</h1>
+                <p class="lede">
+                    Three ways to get data into a component, and how to pick between them &mdash; starting
+                    with the one that needs no Apex at all.
+                </p>
+                <div class="rule"></div>
+
+                <p>
+                    A Lightning Web Component can reach Salesforce data through Lightning Data Service,
+                    through an Apex method bound with <code>@wire</code>, or through an Apex method called
+                    imperatively. All three work, which is exactly why components end up using the wrong
+                    one. The choice decides who controls timing, whether results are cached, and how much
+                    code you have to write and test.
+                </p>
+
+                <h2>First question: do you need Apex at all?</h2>
+                <p>
+                    To show, create or edit a record, usually not. Lightning Data Service (LDS) covers it
+                    with base components such as <code>lightning-record-form</code>, and with the
+                    <code>getRecord</code> wire adapter and the <code>createRecord</code>,
+                    <code>updateRecord</code> and <code>deleteRecord</code> functions from
+                    <code>lightning/uiRecordApi</code>.
+                </p>
+                <p>What you get without writing a line of Apex:</p>
+                <ul>
+                    <li>Sharing, object permissions and field-level security enforced for the current user.</li>
+                    <li>One client-side cache shared by every component on the page, so a record edited in one place updates everywhere it is shown.</li>
+                    <li>No Apex class to maintain, and no test class to write for it.</li>
+                </ul>
+                <p>
+                    Reach for Apex when LDS cannot express the request: a filtered list of related records,
+                    an aggregate, several objects changed in one transaction, or business logic that must
+                    run on the server.
+                </p>
+
+                <h2>The wire service: reads that keep themselves current</h2>
+                <p>
+                    <code>@wire</code> is declarative. You state which method and which parameters; the
+                    framework decides when to call it, and calls it again when a parameter changes. The Apex
+                    method has to be marked cacheable:
+                </p>
+<pre><code>public with sharing class ContactController {
+    @AuraEnabled(cacheable=true)
+    public static List&lt;Contact&gt; getContacts(Id accountId) {
+        return [
+            SELECT Id, Name, Email
+            FROM Contact
+            WHERE AccountId = :accountId
+            WITH USER_MODE
+            ORDER BY Name
+            LIMIT 50
+        ];
+    }
+}</code></pre>
+<pre><code>import { LightningElement, api, wire } from 'lwc';
+import getContacts from '@salesforce/apex/ContactController.getContacts';
+
+export default class ContactList extends LightningElement {
+    @api recordId;
+
+    @wire(getContacts, { accountId: '$recordId' })
+    contacts;
+}</code></pre>
+                <p>
+                    The <code>$</code> prefix makes <code>recordId</code> reactive: when it changes, the
+                    wire fetches again. The property receives an object with <code>data</code> and
+                    <code>error</code>, and the template renders whichever one is present:
+                </p>
+<pre><code>&lt;template lwc:if={contacts.data}&gt;
+    &lt;template for:each={contacts.data} for:item="contact"&gt;
+        &lt;p key={contact.Id}&gt;{contact.Name}&lt;/p&gt;
+    &lt;/template&gt;
+&lt;/template&gt;
+&lt;template lwc:elseif={contacts.error}&gt;
+    &lt;p&gt;Could not load contacts.&lt;/p&gt;
+&lt;/template&gt;</code></pre>
+                <p>Three properties of the wire service are worth knowing before relying on it:</p>
+                <ul>
+                    <li><strong>You do not control when it runs.</strong> There is no way to say &ldquo;call it now&rdquo;. If timing matters, the wire is the wrong tool.</li>
+                    <li><strong>Results are cached on the client.</strong> That is what makes it fast, and also why a wired list can show yesterday's answer after the data changed on the server.</li>
+                    <li><strong>Cacheable methods cannot change data.</strong> The platform blocks DML inside them, so a wire is for reads only.</li>
+                </ul>
+
+                <h2>Imperative calls: when you decide the moment</h2>
+                <p>
+                    Importing an Apex method gives you a function that returns a promise. Calling it yourself
+                    is the right choice when the call changes data, or when it has to happen on a user action
+                    such as a button click rather than on load.
+                </p>
+<pre><code>@AuraEnabled
+public static void removeContact(Id contactId) {
+    Contact toRemove = new Contact(Id = contactId);
+    delete as user toRemove;
+}</code></pre>
+<pre><code>import { LightningElement, api, wire } from 'lwc';
+import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getContacts from '@salesforce/apex/ContactController.getContacts';
+import removeContact from '@salesforce/apex/ContactController.removeContact';
+
+export default class ContactList extends LightningElement {
+    @api recordId;
+
+    @wire(getContacts, { accountId: '$recordId' })
+    contacts;
+
+    async handleRemove(event) {
+        try {
+            await removeContact({ contactId: event.target.dataset.id });
+            await refreshApex(this.contacts);
+        } catch (error) {
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Could not remove contact',
+                message: error.body?.message ?? 'Unexpected error',
+                variant: 'error'
+            }));
+        }
+    }
+}</code></pre>
+                <p>
+                    Note the second line of the handler. The wired list knows nothing about the delete, so
+                    its cache is now stale; <code>refreshApex</code> tells the framework to fetch it again.
+                    It takes the whole value the wire provisioned &mdash; <code>this.contacts</code>, not
+                    <code>this.contacts.data</code>.
+                </p>
+
+                <h2>Choosing between them</h2>
+                <table>
+                    <thead>
+                        <tr><th scope="col">You need to</th><th scope="col">Use</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Show or edit one record</td><td>Lightning Data Service, no Apex</td></tr>
+                        <tr><td>Read data that should reload when an input changes</td><td><code>@wire</code> with a cacheable method</td></tr>
+                        <tr><td>Create, update or delete through custom logic</td><td>Imperative call</td></tr>
+                        <tr><td>Run something on a click, or in a fixed order</td><td>Imperative call</td></tr>
+                        <tr><td>Read data that must never come from a cache</td><td>Imperative call to a non-cacheable method</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Mistakes that keep coming up</h2>
+                <ul>
+                    <li>
+                        <strong>Mutating wired data.</strong> Objects provisioned by a wire are read-only.
+                        Sorting the array in place or assigning to a field throws. Copy first:
+                        <code>[...this.contacts.data]</code>.
+                    </li>
+                    <li>
+                        <strong>Forgetting the refresh.</strong> After an imperative write, every wire that
+                        showed the old data still shows it until <code>refreshApex</code> is called. For
+                        records displayed through LDS, <code>notifyRecordUpdateAvailable</code> does the
+                        same job.
+                    </li>
+                    <li>
+                        <strong>Trusting the client.</strong> An <code>@AuraEnabled</code> method is an
+                        endpoint that any user with access to the class can call with any parameters. Declare
+                        the class <code>with sharing</code>, run queries and DML in user mode, and validate
+                        input on the server as if the component did not exist.
+                    </li>
+                    <li>
+                        <strong>Swallowing errors.</strong> A rejected promise with no <code>catch</code>
+                        leaves the user looking at a button that did nothing. Throw an
+                        <code>AuraHandledException</code> with a readable message in Apex, and show it.
+                    </li>
+                </ul>
+
+                <h2>In short</h2>
+                <p>
+                    Start with Lightning Data Service. Use <code>@wire</code> for reads you want the
+                    framework to keep current. Call Apex imperatively when you are changing data or need to
+                    choose the moment &mdash; and refresh whatever that change made stale.
+                </p>
+            </article>
+
+            <section class="panel contact">
+                <h2>Building on Lightning Web Components?</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

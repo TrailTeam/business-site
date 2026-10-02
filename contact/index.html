@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Contact Us | TrailTeam</title>
+    <meta name="description" content="Get in touch with TrailTeam about Salesforce development: write to contactus@trailteam.dev. The first call is free.">
+    <link rel="canonical" href="https://trailteam.dev/contact/">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trailteam.dev/contact/">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Contact Us | TrailTeam">
+    <meta property="og:description" content="Tell us what you are building on Salesforce and we will get back to you. The first call is free.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="../articles/">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="./" aria-current="page">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div>
+                    <h1>Contact us</h1>
+                    <p class="lede">Planning Salesforce work, or stuck in the middle of it? Write to us &mdash; the first conversation costs nothing.</p>
+                    <div class="rule"></div>
+                </div>
+                <div class="art art-contact" role="img"
+                     aria-label="A monitor showing a contact form with a Send button, next to message, email, phone and location icons"></div>
+            </section>
+
+            <div class="reading">
+                <!-- Same copy as the #contact panel on the landing page; keep the two in step. -->
+                <section class="panel contact">
+                    <h2>Let's talk about your project</h2>
+                    <p>
+                        Tell us what you are building on Salesforce and we will get back to you. The first call is
+                        free, and you will get a straight answer on whether we are the right team for the job.
+                    </p>
+                    <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+                </section>
+
+                <div class="prose">
+                    <h2>What helps us answer well</h2>
+                    <p>A few lines are enough. If you can, include:</p>
+                    <ul>
+                        <li>What you want to build, change or fix, in your own words.</li>
+                        <li>Where your org is today: which Salesforce clouds you use, and how heavily it is customised or integrated.</li>
+                        <li>Any deadline or event the work has to be ready for.</li>
+                        <li>Whether you have a team we would work alongside, or need the whole thing delivered.</li>
+                    </ul>
+                    <p>
+                        Not sure yet what you need? Say so. Working that out is what the first call is for.
+                    </p>
+
+                    <h2>What happens next</h2>
+                    <ol>
+                        <li>
+                            <strong>We reply by email</strong> and agree a time to talk.
+                        </li>
+                        <li>
+                            <strong>Discovery call.</strong> We talk through your goals, your current org and
+                            the constraints around it. No commitment and no charge &mdash; and if we are not
+                            the right fit, we will say so.
+                        </li>
+                        <li>
+                            <strong>Written proposal.</strong> What we will build, in what order, how long it
+                            takes and what it costs. Fixed price or time and materials, whichever suits the work.
+                        </li>
+                    </ol>
+                    <p>
+                        The full process, from first call to release and support, is described on the
+                        <a href="../#process">home page</a>.
+                    </p>
+
+                    <h2>Looking for a job, not a team?</h2>
+                    <p>
+                        Vacancies are on the <a href="../careers/">Careers</a> page. Salesforce specialists can
+                        send a CV to <a href="mailto:careers@trailteam.dev">careers@trailteam.dev</a> at any time.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

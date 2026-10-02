@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Salesforce Winter '27: what changes for developers, admins and QA | TrailTeam</title>
+    <meta name="description" content="Salesforce Winter '27 (API 68.0) for developers, admins and QA: higher Apex heap limits, user-context flows, Flow Test Mode, enforced updates and retirements.">
+    <link rel="canonical" href="https://trailteam.dev/articles/salesforce-winter-27-release.html">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://trailteam.dev/articles/salesforce-winter-27-release.html">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Salesforce Winter '27: what changes for developers, admins and QA">
+    <meta property="og:description" content="The headlines of Winter '27 are about AI agents. This is the rest of the release: the platform changes that affect daily work, grouped by who has to act on them.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="true">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <a class="back" href="./">&larr; All articles</a>
+
+            <article class="prose">
+                <p class="meta">Releases &middot; Intermediate &middot; For developers, admins and QA &middot; 8 min read</p>
+                <h1>Salesforce Winter '27: what changes for developers, admins and QA</h1>
+                <p class="lede">
+                    The headlines of Winter '27 are about AI agents. This is the rest of the release: the
+                    platform changes that affect daily work, grouped by who has to act on them.
+                </p>
+                <div class="rule"></div>
+
+                <p>
+                    Winter '27 is API version 68.0. Most of what Salesforce announced for it concerns
+                    Agentforce, and you will find that covered everywhere. This overview is about the
+                    quieter part: limits, permissions, flows, testing tools and the retirements that now
+                    have dates.
+                </p>
+                <p>
+                    Each item says whether it is generally available, a beta or a developer preview. That
+                    label matters: betas and previews are not for production, and some of them are not even
+                    available there. Everything below comes from the official
+                    <a href="https://help.salesforce.com/s/articleView?id=release-notes.salesforce_release_notes.htm&amp;release=264&amp;type=5">Salesforce Winter '27 Release Notes</a>;
+                    read the entry for a feature before relying on it, because release notes are amended
+                    after publication.
+                </p>
+
+                <h2>What changes without anyone doing anything</h2>
+                <p>
+                    Start here. These arrive with the upgrade, whether or not your team has read a single
+                    release note.
+                </p>
+                <ul>
+                    <li>
+                        <strong>Apex heap limits go up</strong> &mdash; from 6 MB to 10 MB for synchronous
+                        transactions and from 12 MB to 25 MB for asynchronous ones, automatically, in every
+                        org that runs Apex.
+                    </li>
+                    <li>
+                        <strong>Profile filtering is enforced.</strong> A user sees only their own profile
+                        name unless they hold the View All Profiles permission.
+                    </li>
+                    <li>
+                        <strong>Accessibility changes for page headers and modal windows are enforced.</strong>
+                        Above 200% zoom the page header scrolls with the page instead of covering it, and
+                        modal content stays inside the viewport.
+                    </li>
+                    <li>
+                        <strong>Flows retry on a record lock.</strong> A flow that meets a lock while its
+                        transaction is starting now waits 10 seconds and tries again instead of failing
+                        with <code>UNABLE_TO_LOCK_ROW</code>.
+                    </li>
+                </ul>
+
+                <h2>For developers: Apex</h2>
+                <p>
+                    <strong>Heap limits (generally available).</strong> The new 10 MB and 25 MB ceilings
+                    need no opt-in. To see what an org currently enforces:
+                </p>
+<pre><code>System.debug(Limits.getLimitHeapSize());</code></pre>
+                <p>
+                    One transitional detail: if you build in a Winter '27 sandbox and deploy to a production
+                    org that is still on Summer '26, code can pass in the sandbox and run out of heap in
+                    production. For that case, nonproduction orgs have a setting under Apex Settings in
+                    Setup, <em>Enforce the Summer '26 Apex heap limit</em>, which holds them to the old
+                    values. From Spring '27 the higher limits apply everywhere regardless of it. And a
+                    larger heap is headroom, not a design: it does not make a query selective or a loop
+                    cheaper.
+                </p>
+                <p>
+                    <strong>Recompile only what is invalid (generally available).</strong> Instead of
+                    recompiling every class in the org, you can ask for the classes and triggers that
+                    actually have errors, from Setup or through a new Tooling API endpoint in version 68.0:
+                </p>
+<pre><code>POST /services/data/v68.0/tooling/apexCompileResults HTTP/1.1
+Authorization: Bearer &lt;session-id&gt;
+Content-Type: application/json
+
+{}</code></pre>
+                <p>
+                    The response lists each invalid class with the line, column and message of every
+                    problem. In a large org this is a quick health check to run after a deployment.
+                </p>
+                <p>
+                    <strong>Integration tests with real callouts (developer preview).</strong> Apex tests
+                    have always required mocks for HTTP. Integration tests remove that restriction: a class
+                    and its methods annotated <code>@IntegrationTest</code> can call real endpoints,
+                    including External Services behind Named Credentials, and their data is committed, not
+                    rolled back &mdash; so <code>@BeforeClass</code> prepares it and <code>@TearDown</code>
+                    has to delete it. The preview is limited to scratch orgs with the feature switched on:
+                </p>
+<pre><code>{
+  "orgName": "My Company",
+  "edition": "Developer",
+  "features": ["ApexIntegrationTests"]
+}</code></pre>
+                <p>
+                    Only one integration test runs at a time, asynchronously, and a mock registered with
+                    <code>Test.setMock()</code> still takes precedence over the real endpoint. Worth a
+                    trial in a scratch org; not something to build a pipeline on yet.
+                </p>
+                <p>
+                    <strong>Warnings for very old Apex.</strong> Classes and triggers saved at API versions
+                    9.0 to 19.0 now produce a compiler warning, because those versions are scheduled for
+                    retirement in a future release. Move them to 20.0 or later &mdash; in practice, to a
+                    current version &mdash; while it is still a warning.
+                </p>
+
+                <h2>For developers: LWC and APIs</h2>
+                <ul>
+                    <li>
+                        <strong>LWC API version 68.0 has no version-specific changes.</strong> Salesforce
+                        itself calls that a good moment to bring existing components up to date. Upgrade
+                        one version at a time and fix warnings as you go.
+                    </li>
+                    <li>
+                        <strong>Third-party web components (generally available).</strong> The
+                        <code>lwc:external</code> directive, which renders a third-party custom element
+                        natively in an LWC template, leaves beta unchanged.
+                    </li>
+                    <li>
+                        <strong>A <code>latest</code> alias in REST URIs (generally available).</strong>
+                        <code>/services/data/latest/sobjects/Account</code> is routed to the newest version
+                        the org supports. It is convenient for scripts and exploration. For a production
+                        integration we would keep a pinned version, so that behaviour changes when you
+                        decide, not when the org is upgraded.
+                    </li>
+                    <li>
+                        <strong>Field-to-field comparison in SOQL (beta).</strong> A new
+                        <code>FORMULA()</code> function allows arithmetic in a <code>WHERE</code> clause, so
+                        two fields can be compared without a helper formula field. It works in sandboxes,
+                        Developer Edition and scratch orgs on API 68.0, and is not available in production.
+                    </li>
+                </ul>
+
+                <h2>For admins: security and access</h2>
+                <p>
+                    <strong>Flows that cannot be escalated (generally available).</strong> Until now, a flow
+                    set to run in user context inherited system context whenever it was called by something
+                    running in system context &mdash; another flow, Apex, another automation. A new run
+                    option, <em>User Context&ndash;Enforces User Permissions</em>, guarantees the running
+                    user's access level no matter what calls the flow. It is available for screen flows and
+                    autolaunched flows on API version 68.0 or later, under Save &rarr; Show Advanced &rarr;
+                    How to Run the Flow. It is set per flow, so nothing changes until someone changes it.
+                </p>
+                <p>
+                    <strong>Profile filtering (enforced).</strong> If a role genuinely needs to see other
+                    users' profile names, assign View All Profiles. Then check anything that reads a profile
+                    name on behalf of a standard user.
+                </p>
+                <p>
+                    <strong>Manual shares can survive an owner change (generally available).</strong>
+                    Changing a record's owner has always deleted its manual shares. A new option in Sharing
+                    Settings, <em>Keep manual shares when transferring records</em>, retains them. It is off
+                    by default.
+                </p>
+                <p>
+                    <strong>A dedicated permission for Setup Audit Trail (release update).</strong>
+                    View Setup Audit Trail lets you grant access to the audit trail without the broader View
+                    Setup permission. Existing access is preserved automatically; new profiles and
+                    permission sets need it assigned explicitly. Enforcement is in Spring '27.
+                </p>
+
+                <h2>For admins: everyday work</h2>
+                <ul>
+                    <li>
+                        <strong>Freer inline editing in list views.</strong> Two optional User Interface
+                        Settings: <em>Remove list view inline edit dependencies on page layout</em> and
+                        <em>Make inline edits in list views with multiple record types</em>. Both are off by
+                        default.
+                    </li>
+                    <li>
+                        <strong>Screen flows on many records at once.</strong> A flow quick action can be
+                        added to a list view or a related list as a mass action; the flow receives the IDs
+                        of the selected records.
+                    </li>
+                    <li>
+                        <strong>Flow Builder housekeeping.</strong> An edit history for tracking changes to
+                        a flow over time, and a filter that finds unused resources.
+                    </li>
+                    <li>
+                        <strong>Field history tracking for users</strong> is generally available, and
+                        <strong>record preview from Lightning reports</strong> arrives as a beta.
+                    </li>
+                </ul>
+
+                <h2>For QA: new tools, and what to retest</h2>
+                <p>
+                    <strong>Flow Test Mode (beta).</strong> Debugging and testing a flow used to live in
+                    different places. Test Mode puts them together for autolaunched and record-triggered
+                    flows: set up inputs or a triggering record, run the scenario, save it, and run it again
+                    after every change. Add assertions and a saved scenario reports pass or fail. Enable it
+                    in Process Automation Settings.
+                </p>
+                <p>
+                    <strong>Mock outputs for actions and subflows (beta).</strong> In those test scenarios,
+                    an Action or Subflow element can return a predefined result, so the test checks the
+                    flow's logic without calling an external system.
+                </p>
+                <p>What this release puts on the regression list:</p>
+                <table>
+                    <thead>
+                        <tr><th scope="col">Change</th><th scope="col">Retest</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Profile filtering</td><td>Flows, formulas, validation rules and reports that read a profile name, run as a standard user</td></tr>
+                        <tr><td>Accessibility updates</td><td>Pages with custom components at 200&ndash;400% zoom: headers, modals, anything positioned by hand</td></tr>
+                        <tr><td>SOAP <code>login()</code> permission</td><td>Every integration and data-loading tool that authenticates through SOAP, with its real integration user</td></tr>
+                        <tr><td>Lock retry in flows</td><td>Flows with fault paths built around <code>UNABLE_TO_LOCK_ROW</code>: the failure now comes later, or not at all</td></tr>
+                        <tr><td>User-context flows</td><td>Any flow switched to the new option, as a low-privilege user: it may now fail where it used to succeed</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Dates for the project plan</h2>
+                <p>
+                    Several retirements now have a release attached. None of them is urgent this month; all
+                    of them are cheaper to schedule than to discover.
+                </p>
+                <table>
+                    <thead>
+                        <tr><th scope="col">When</th><th scope="col">What happens</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1 December 2026</td><td>The Use Any API Auth permission is required for SOAP <code>login()</code> in every org</td></tr>
+                        <tr><td>Spring '27</td><td>Higher heap limits apply everywhere; the View Setup Audit Trail update is enforced</td></tr>
+                        <tr><td>Summer '27</td><td>Support for connected apps ends &mdash; migrate to external client apps. SOAP <code>login()</code> in API versions 31.0&ndash;64.0 is retired. Platform API versions 31.0&ndash;40.0 are deprecated</td></tr>
+                        <tr><td>Summer '28</td><td>Platform API versions 31.0&ndash;40.0 are retired; calls to them fail</td></tr>
+                    </tbody>
+                </table>
+                <p>
+                    Connected apps keep working after Summer '27, but without fixes or support. Migration
+                    starts from the app's page in App Manager with Migrate to External Client App. For the
+                    API versions, the work is finding who still calls them: old middleware, exports and
+                    scripts nobody has opened in years.
+                </p>
+
+                <h2>In short</h2>
+                <ul>
+                    <li>Developers: enjoy the heap, clear the old-API warnings, try integration tests in a scratch org.</li>
+                    <li>Admins: review profile filtering, decide on manual shares, move sensitive flows to the enforced user context.</li>
+                    <li>QA: try Flow Test Mode in a sandbox and run the five regression checks above.</li>
+                    <li>Everyone: put connected apps and old API versions on next year's plan now.</li>
+                    <li>Treat betas and previews as things to learn, not things to ship.</li>
+                </ul>
+            </article>
+
+            <section class="panel contact">
+                <h2>Want a second opinion on your upgrade?</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

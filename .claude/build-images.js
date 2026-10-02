@@ -4,8 +4,10 @@
  *   npm install sharp        (anywhere; this repo has no package.json on purpose)
  *   node .claude/build-images.js
  *
- * Sources: header_1.png / header2.png (full-resolution banners with marketing copy and the
- * wordmark baked into the pixels) and certs-src/*.png if you are re-encoding the badges.
+ * Sources live in images/src/: header_1.png / header2.png (full-resolution banners with
+ * marketing copy and the wordmark baked into the pixels) and the two contact_us*.jfif
+ * originals. Output goes to images/. The badges in images/certs/ were encoded from the
+ * team's PNGs once and are not regenerated here.
  *
  * The patch rectangles below were measured by scanning the originals for columns and rows
  * containing ink. If a banner is ever replaced, re-measure them — do not guess.
@@ -15,8 +17,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..') + path.sep;
-const SRC = ROOT;
-const OUT = ROOT;
+const SRC = ROOT + 'images' + path.sep + 'src' + path.sep;
+const OUT = ROOT + 'images' + path.sep;
 
 const patch = (left, top, width, height) => ({
   input: { create: { width, height, channels: 3, background: '#ffffff' } }, left, top
@@ -81,6 +83,14 @@ function report(file, size) {
   report(OUT + 'logo.png', '420 wide');
   await knockout(logo, OUT + 'logo-dark.png', { below: 190, to: 205 });
 
+  // --- contact page: two separately drawn originals (contact_us.jfif on white,
+  //     contact_us_dark.jfif on its own dark gradient), so no knockout — just re-encode.
+  //     Both are 1100x976, the hero's proportions, and are used uncropped. ---
+  for (const [src, out] of [['contact_us.jfif', 'contact.webp'], ['contact_us_dark.jfif', 'contact-dark.webp']]) {
+    await sharp(SRC + src).resize({ width: 1100, withoutEnlargement: true }).webp({ quality: 82 }).toFile(OUT + out);
+    report(OUT + out, '1100 wide');
+  }
+
   // --- social card: the one place the original banner is used intact, text and all ---
   await sharp(SRC + 'header_1.png')
     .extract({ left: 0, top: 450, width: 6092, height: 3198 })
@@ -104,8 +114,8 @@ function report(file, size) {
       .toFile(OUT + 'apple-touch-icon.png');
     report(OUT + 'apple-touch-icon.png', '180x180');
   } else {
-    console.log('apple-touch-icon   skipped (no favicon-src.png; recover it with');
-    console.log('                   `git show fd81f06:favicon.png > favicon-src.png`)');
+    console.log('apple-touch-icon   skipped (no images/src/favicon-src.png; recover it with');
+    console.log('                   `git show fd81f06:favicon.png > images/src/favicon-src.png`)');
   }
 
   // favicon.png is deliberately not regenerated here: it is already the shrunk 64x64 copy,

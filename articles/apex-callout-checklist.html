@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Before the first callout: an Apex integration checklist | TrailTeam</title>
+    <meta name="description" content="Credentials, limits, transaction order and failure handling: the decisions to make before writing an Apex callout from Salesforce to an external API.">
+    <link rel="canonical" href="https://trailteam.dev/articles/apex-callout-checklist.html">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://trailteam.dev/articles/apex-callout-checklist.html">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Before the first callout: an Apex integration checklist">
+    <meta property="og:description" content="Credentials, limits, transaction order and failure handling — the decisions that are cheap to make before an integration is written and expensive after.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="true">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <a class="back" href="./">&larr; All articles</a>
+
+            <article class="prose">
+                <p class="meta">Integrations &middot; Intermediate &middot; For developers &middot; 6 min read</p>
+                <h1>Before the first callout: an Apex integration checklist</h1>
+                <p class="lede">
+                    Credentials, limits, transaction order and failure handling &mdash; the decisions that
+                    are cheap to make before an integration is written and expensive after.
+                </p>
+                <div class="rule"></div>
+
+                <p>
+                    Sending an HTTP request from Apex takes five lines. Making that request safe to run in
+                    production takes a few decisions that those five lines do not force you to make. This
+                    is the list to go through before writing the first one.
+                </p>
+
+                <h2>1. Keep the endpoint and the secret out of the code</h2>
+                <p>
+                    A URL in a class and a token in a custom setting work until the first sandbox refresh
+                    or credential rotation. Named Credentials exist for this. The Named Credential holds
+                    the base URL, an External Credential holds the authentication protocol and the secret,
+                    and a permission set decides who may use it. The code only refers to it by name:
+                </p>
+<pre><code>request.setEndpoint('callout:ERP/customers');</code></pre>
+                <p>
+                    Salesforce adds the authentication header at send time, so the secret never reaches
+                    Apex, a debug log or the repository. Each environment gets its own value for the same
+                    name, and deployments stop carrying endpoints with them.
+                </p>
+
+                <h2>2. Know the limits you are designing inside</h2>
+                <ul>
+                    <li>100 callouts per transaction.</li>
+                    <li>A default timeout of 10 seconds per callout, adjustable up to 120 with <code>setTimeout</code>.</li>
+                    <li>120 seconds in total for all callouts in one transaction.</li>
+                    <li>A request or response body of at most 6 MB in synchronous Apex, 12 MB in asynchronous.</li>
+                </ul>
+                <p>
+                    If the design is &ldquo;one callout per record&rdquo;, the 101st record ends the
+                    transaction. Ask whether the other system has a bulk endpoint before anything else;
+                    if it does not, the work has to be split across transactions.
+                </p>
+
+                <h2>3. Callout first, DML second</h2>
+                <p>
+                    Once a transaction has written to the database, it cannot call out. Apex throws
+                    <code>You have uncommitted work pending</code>, because the platform will not hold a
+                    database transaction open while it waits on someone else's server. So inside one
+                    transaction the order is fixed: do the callouts, then save the results.
+                </p>
+                <p>
+                    When the natural order is the other way round &mdash; save the record, then tell the
+                    other system &mdash; the callout belongs in a separate, asynchronous transaction.
+                </p>
+
+                <h2>4. From a trigger, always go asynchronous</h2>
+                <p>
+                    A trigger runs in the middle of a save, so it cannot call out directly. Hand the work to
+                    a Queueable that implements <code>Database.AllowsCallouts</code>:
+                </p>
+<pre><code>public with sharing class AccountSyncJob implements Queueable, Database.AllowsCallouts {
+    private final Set&lt;Id&gt; accountIds;
+
+    public AccountSyncJob(Set&lt;Id&gt; accountIds) {
+        this.accountIds = accountIds;
+    }
+
+    public void execute(QueueableContext context) {
+        List&lt;Account&gt; accounts = [
+            SELECT Id, Name, BillingCountry
+            FROM Account
+            WHERE Id IN :accountIds
+        ];
+
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('callout:ERP/customers');
+        request.setMethod('POST');
+        request.setHeader('Content-Type', 'application/json');
+        request.setTimeout(20000);
+        request.setBody(JSON.serialize(accounts));
+
+        try {
+            HttpResponse response = new Http().send(request);
+            if (response.getStatusCode() &gt;= 300) {
+                logFailure('HTTP ' + response.getStatusCode());
+            }
+        } catch (CalloutException e) {
+            logFailure(e.getMessage());
+        }
+    }
+
+    private void logFailure(String reason) {
+        // Write the account ids and the reason to a log object that a person
+        // or a retry job will read. DML is fine here: the callout is behind us.
+    }
+}</code></pre>
+                <p>
+                    The trigger enqueues one job for the whole batch it received, not one per record:
+                </p>
+<pre><code>System.enqueueJob(new AccountSyncJob(Trigger.newMap.keySet()));</code></pre>
+                <p>
+                    The job sends all the records in one request. That keeps a 200-record data load at one
+                    callout instead of two hundred.
+                </p>
+
+                <h2>5. Decide what happens when it fails</h2>
+                <p>
+                    It will fail: the other system is deploying, a certificate expired, the network dropped
+                    the response. Three questions need an answer before go-live, not after the first incident.
+                </p>
+                <ul>
+                    <li>
+                        <strong>Where is the failure recorded?</strong> A debug log is not an answer; it is
+                        short-lived and nobody is watching it. A log record, a status field on the record
+                        or a platform event that someone is subscribed to is.
+                    </li>
+                    <li>
+                        <strong>Who or what retries?</strong> A scheduled job that picks up failed rows is
+                        usually enough. Decide how many attempts, and what happens after the last one.
+                    </li>
+                    <li>
+                        <strong>Is a retry safe?</strong> A timeout means the response did not arrive, not
+                        that the request was not processed. Send a stable key with every request &mdash; the
+                        Salesforce record Id works &mdash; so the receiver can recognise a repeat and ignore
+                        it instead of creating a duplicate.
+                    </li>
+                </ul>
+
+                <h2>6. Ask whether it should be a callout at all</h2>
+                <p>
+                    A callout couples Salesforce to the availability of the other system. If Salesforce does
+                    not need the answer straight away, publishing a Platform Event or enabling Change Data
+                    Capture turns the dependency around: Salesforce announces what changed, and middleware or
+                    the other system subscribes and catches up at its own pace, including after downtime
+                    within the event retention window.
+                </p>
+
+                <h2>7. Test without the network</h2>
+                <p>
+                    Apex tests cannot make real callouts, which is a feature: the test controls the response.
+                    Implement <code>HttpCalloutMock</code> and make the status code a parameter, so the
+                    failure path gets a test as easily as the success path.
+                </p>
+<pre><code>private class ErpMock implements HttpCalloutMock {
+    private final Integer statusCode;
+
+    public ErpMock(Integer statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public HttpResponse respond(HttpRequest request) {
+        Assert.areEqual('POST', request.getMethod());
+        HttpResponse response = new HttpResponse();
+        response.setStatusCode(statusCode);
+        return response;
+    }
+}</code></pre>
+<pre><code>Test.startTest();
+Test.setMock(HttpCalloutMock.class, new ErpMock(503));
+System.enqueueJob(new AccountSyncJob(accountIds));
+Test.stopTest();
+
+// The job has run by now. Assert that the failure was recorded.</code></pre>
+                <p>
+                    Test at least a success, a server error and a timeout (have the mock throw a
+                    <code>CalloutException</code>). The unhappy paths are the ones production will exercise
+                    when nobody is looking.
+                </p>
+
+                <h2>In short</h2>
+                <ul>
+                    <li>Named Credentials for the endpoint and the secret.</li>
+                    <li>One bulk request, not one per record.</li>
+                    <li>Callouts before DML, or in their own asynchronous transaction.</li>
+                    <li>Failures recorded somewhere visible, with a retry that is safe to repeat.</li>
+                    <li>Events instead of callouts when the answer is not needed immediately.</li>
+                    <li>Mocked tests for the failure paths, not just the happy one.</li>
+                </ul>
+            </article>
+
+            <section class="panel contact">
+                <h2>Planning an integration?</h2>
+                <p>
+                    Tell us what you are building on Salesforce and we will get back to you. The first call is
+                    free, and you will get a straight answer on whether we are the right team for the job.
+                </p>
+                <a class="btn" href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

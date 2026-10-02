@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Careers | TrailTeam</title>
+    <meta name="description" content="Salesforce developer positions at TrailTeam, a certified Salesforce development team.">
+    <link rel="canonical" href="https://trailteam.dev/careers/">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trailteam.dev/careers/">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Careers | TrailTeam">
+    <meta property="og:description" content="Salesforce developer positions at TrailTeam.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="../articles/">Articles</a>
+                <a href="./" aria-current="page">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <h1>Careers</h1>
+            <!-- States how many positions are open; rewrite it whenever a vacancy opens or closes. -->
+            <p class="lede">There are no open positions at the moment. The roles below have been filled.</p>
+            <!-- Standing invitation; stays whether or not anything is open. -->
+            <p>
+                If you are a Salesforce specialist, you are welcome to send your CV to
+                <a href="mailto:careers@trailteam.dev">careers@trailteam.dev</a>. We will let you know
+                when a position opens.
+            </p>
+            <div class="rule"></div>
+
+            <!-- Open positions first, then closed ones; a new vacancy goes in as the FIRST <li>.
+                 Each entry mirrors the status, meta line, title and lede of its vacancy page.
+                 See .claude/rules/careers.md. -->
+            <ul class="article-list">
+                <li>
+                    <p class="meta"><span class="status status-closed">Closed</span>Middle/Senior &middot; Full-time &middot; Remote</p>
+                    <h2><a href="salesforce-developer-latam.html">Salesforce Developer, LATAM</a></h2>
+                    <p>Apex, Lightning Web Components and integrations on the Salesforce platform, across the full development cycle.</p>
+                </li>
+                <li>
+                    <p class="meta"><span class="status status-closed">Closed</span>Middle/Senior &middot; Full-time &middot; Remote</p>
+                    <h2><a href="salesforce-developer-poland.html">Salesforce Developer, Poland</a></h2>
+                    <p>Apex, Lightning Web Components and integrations on the Salesforce platform, across the full development cycle.</p>
+                </li>
+            </ul>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

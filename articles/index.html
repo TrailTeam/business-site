@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Articles | TrailTeam</title>
+    <meta name="description" content="Practical notes on building for the Salesforce platform: Apex, Lightning Web Components and integrations.">
+    <link rel="canonical" href="https://trailteam.dev/articles/">
+    <meta name="theme-color" content="#10151a">
+    <link rel="icon" type="image/png" sizes="64x64" href="../images/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trailteam.dev/articles/">
+    <meta property="og:site_name" content="TrailTeam">
+    <meta property="og:title" content="Articles | TrailTeam">
+    <meta property="og:description" content="Practical notes on building for the Salesforce platform: Apex, Lightning Web Components and integrations.">
+    <meta property="og:image" content="https://trailteam.dev/images/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Applied before first paint so a stored theme choice does not flash. -->
+    <script>
+        try {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light' || stored === 'dark') document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../site.css">
+    <script src="../site.js" defer></script>
+</head>
+<body>
+
+    <div class="wrap">
+
+        <header class="site-header">
+            <a class="brand" href="../" aria-label="TrailTeam home"></a>
+
+            <nav class="site-nav" aria-label="Main">
+                <a href="../">Home</a>
+                <a href="./" aria-current="page">Articles</a>
+                <a href="../careers/">Careers</a>
+                <a href="../contact/">Contact Us</a>
+            </nav>
+
+            <div class="header-end">
+                <button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="reading">
+            <h1>Articles</h1>
+            <p class="lede">Practical notes on building for the Salesforce platform.</p>
+            <div class="rule"></div>
+
+            <!-- A new article always goes in as the FIRST <li>. Each entry mirrors the meta line,
+                 title and lede of its article page. See .claude/rules/articles.md. -->
+            <ul class="article-list">
+                <li>
+                    <p class="meta">Releases &middot; Intermediate &middot; For developers, admins and QA &middot; 8 min read</p>
+                    <h2><a href="salesforce-winter-27-release.html">Salesforce Winter '27: what changes for developers, admins and QA</a></h2>
+                    <p>The headlines of Winter '27 are about AI agents. This is the rest of the release: the platform changes that affect daily work, grouped by who has to act on them.</p>
+                </li>
+                <li>
+                    <p class="meta">Testing &middot; Intermediate &middot; For QA &middot; 5 min read</p>
+                    <h2><a href="testing-salesforce-permissions.html">Testing who can see what: a QA guide to Salesforce permissions</a></h2>
+                    <p>Most access bugs are found by a user who sees something they should not. How to test profiles, permission sets, field-level security and sharing before that happens.</p>
+                </li>
+                <li>
+                    <p class="meta">Integrations &middot; Intermediate &middot; For developers &middot; 6 min read</p>
+                    <h2><a href="apex-callout-checklist.html">Before the first callout: an Apex integration checklist</a></h2>
+                    <p>Credentials, limits, transaction order and failure handling &mdash; the decisions that are cheap to make before an integration is written and expensive after.</p>
+                </li>
+                <li>
+                    <p class="meta">Lightning Web Components &middot; Intermediate &middot; For developers &middot; 5 min read</p>
+                    <h2><a href="lwc-wire-vs-imperative-apex.html">Wire or imperative: calling Apex from a Lightning Web Component</a></h2>
+                    <p>Three ways to get data into a component, and how to pick between them &mdash; starting with the one that needs no Apex at all.</p>
+                </li>
+                <li>
+                    <p class="meta">Apex &middot; Beginner &middot; For developers &middot; 3 min read</p>
+                    <h2><a href="apex-governor-limits.html">Designing Apex around governor limits</a></h2>
+                    <p>Code that works on one record in a sandbox can fail on two hundred in production. The limits that matter, and the habits that keep you inside them.</p>
+                </li>
+            </ul>
+        </main>
+
+        <footer>
+            &copy; 2026 TrailTeam. All rights reserved. &middot;
+            <a href="mailto:contactus@trailteam.dev">contactus@trailteam.dev</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>
