@@ -347,6 +347,9 @@ main section { scroll-margin-top: 24px; }
 
 .contact p { margin-left: auto; margin-right: auto; }
 
+/* The office address under the button: plain text, not the browser default italic. */
+.contact address { margin-top: 20px; font-style: normal; font-size: 0.95rem; color: var(--ink-soft); }
+
 /* The label is an email address, so the pill has to survive narrow screens:
    it may shrink and, as a last resort, break rather than escape its panel. */
 .btn {
@@ -533,6 +536,8 @@ footer {
 }
 
 footer a { color: inherit; }
+
+footer address { margin-top: 8px; font-style: normal; }
 
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
